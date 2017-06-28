@@ -75,7 +75,7 @@ void ParticleFilter::prediction(double delta_t, double std_pos[], double velocit
 	//cout << "velocity: " << velocity << endl;
 
 	double x, y, theta;
-	for (int i = 0; i < num_particles; i++) {
+	for (int i = 0; i < num_particles; ++i) {
 		Particle p;
 		p = particles[i];
 
@@ -106,6 +106,17 @@ void ParticleFilter::dataAssociation(std::vector<LandmarkObs> predicted, std::ve
 	// NOTE: this method will NOT be called by the grading code. But you will probably find it useful to
 	//   implement this method and use it as a helper during the updateWeights phase.
 
+	for (auto& observation:observations){
+		double  min_distance = 99999999.0;
+		for (const auto& p:predicted) {
+            double distance = dist(p.x, p.y, observation.x, observation.y);
+            if (distance < min_distance){
+                min_distance = distance;
+                observation.id = p.id;
+            }
+        }
+	}
+
 }
 
 void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
@@ -126,6 +137,20 @@ void ParticleFilter::resample() {
 	// TODO: Resample particles with replacement with probability proportional to their weight.
 	// NOTE: You may find std::discrete_distribution helpful here.
 	//   http://en.cppreference.com/w/cpp/numeric/random/discrete_distribution
+
+	random_device rd;
+	default_random_engine gen(rd());
+
+	// Vector for new particles
+  vector<Particle> particles_new (num_particles);
+
+	for (int i = 0; i < num_particles; ++i) {
+    discrete_distribution<int> resample(weights.begin(), weights.end());
+    particles_new[i] = particles[resample(gen)];
+
+  }
+	// Replace old particles with the resampled particles
+  particles = particles_new;
 
 }
 

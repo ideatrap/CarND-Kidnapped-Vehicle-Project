@@ -39,27 +39,26 @@ void ParticleFilter::init(double x, double y, double theta, double std[]) {
 	normal_distribution<double> dist_y(y, std[1]);
 	normal_distribution<double> dist_theta(theta, std[2]);
 
-    //Set standard deviations for x, y, and psi.
-    double std_x = std[0];
-    double std_y = std[1];
-    double std_theta = std[2];
+  //Set standard deviations for x, y, and psi.
+  double std_x = std[0];
+  double std_y = std[1];
+  double std_theta = std[2];
 
 	// Initializes particles
 	for (int i = 0; i < num_particles; i++) {
-
-    // Add generated particle data to particles class
+  // Add generated particle data to particles class
         Particle p;
         p.id = i;
         p.x = dist_x(gen);
         p.y = dist_y(gen);
         p.theta = dist_theta(gen);
         p.weight = 1.0/num_particles;
-		particles[i] = p;
+				particles[i] = p;
         weights[i]=(p.weight);
   }
 
 	is_initialized = true;
-    return;
+  return;
 
 }
 
@@ -97,7 +96,6 @@ void ParticleFilter::prediction(double delta_t, double std_pos[], double velocit
 
 		particles[i] = p;
 	}
-
 }
 
 void ParticleFilter::dataAssociation(std::vector<LandmarkObs> predicted, std::vector<LandmarkObs>& observations) {
@@ -106,17 +104,15 @@ void ParticleFilter::dataAssociation(std::vector<LandmarkObs> predicted, std::ve
 	// NOTE: this method will NOT be called by the grading code. But you will probably find it useful to
 	//   implement this method and use it as a helper during the updateWeights phase.
 	for (auto& observation:observations){
-	double  best_distance = 9999999.0;
-	for (const auto& p:predicted) {
-					double distance = dist(p.x, p.y, observation.x, observation.y);
-					if (distance < best_distance){
-							observation.id = p.id;
-							best_distance = distance;
-
-					}
+		double  best_distance = 9999999.0;
+		for (const auto& p:predicted) {
+			double distance = dist(p.x, p.y, observation.x, observation.y);
+			if (distance < best_distance){
+					observation.id = p.id;
+					best_distance = distance;
 			}
-}
-
+		}
+	}
 }
 
 void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
@@ -149,7 +145,7 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
 
 								inrange_landmarks.push_back(landmark);
             }
-        }
+      }
       if (inrange_landmarks.size()>0){
         // now transform observations to map frame (to match inrange_landmarks coordinate system)
         // assuming the observations were made from the i'th particle's perspective
@@ -158,8 +154,6 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
             transformed_obs[j].x = observations[j].x * cos(particle.theta) - observations[j].y * sin(particle.theta) + particle.x;
             transformed_obs[j].y = observations[j].x * sin(particle.theta) + observations[j].y * cos(particle.theta) + particle.y;
         }
-
-
         //get associations
         dataAssociation(inrange_landmarks, transformed_obs);
         //update weights
@@ -167,44 +161,38 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
 				for (const auto observation:transformed_obs) {
 								//cout << "use id: " <<observation.id  << endl;
 
-                int index = observation.id;
-				double nn_x = map_landmarks.landmark_list[index].x_f;
-                double nn_y = map_landmarks.landmark_list[index].y_f;
+		        int index = observation.id;
+						double nn_x = map_landmarks.landmark_list[index].x_f;
+		        double nn_y = map_landmarks.landmark_list[index].y_f;
 
-				double x = observation.x;
-                double y = observation.y;
+						double x = observation.x;
+		        double y = observation.y;
 
-                double std_x = std_landmark[0];
-                double std_y = std_landmark[1];
+		        double std_x = std_landmark[0];
+		        double std_y = std_landmark[1];
 
-								//calculate multi-variate Gaussian distribution
-                double x_diff = (x - nn_x) * (x - nn_x) / (2 * std_x * std_x);
-                double y_diff = (y - nn_y) * (y - nn_y) / (2 * std_y * std_y);
-                w *= 1 / (2 * M_PI * std_x * std_y) * exp(-(x_diff + y_diff));
-            }
-        particles[i].weight = w;
+						//calculate multi-variate Gaussian distribution
+		        double x_diff = (x - nn_x) * (x - nn_x) / (2 * std_x * std_x);
+		        double y_diff = (y - nn_y) * (y - nn_y) / (2 * std_y * std_y);
+		        w *= 1 / (2 * M_PI * std_x * std_y) * exp(-(x_diff + y_diff));
+    		}
+				particles[i].weight = w;
       }
       else{
         particles[i].weight = 0;
       }
 
     }
-
-    //now normalize
+    //now normalize it
     double scale_factor = 0.0;
     for (int i = 0; i < num_particles; i++){
       scale_factor+=particles[i].weight;
-
     }
     // cout << scale_factor << endl;
     for(int i = 0; i < num_particles; i++){
       particles[i].weight = particles[i].weight/scale_factor;
       weights[i] = particles[i].weight;
     }
-
-
-
-
 }
 
 void ParticleFilter::resample() {
@@ -214,7 +202,6 @@ void ParticleFilter::resample() {
 
 	random_device rd;
 	default_random_engine gen(rd());
-
 	// Vector for new particles
   vector<Particle> particles_new (num_particles);
 
@@ -224,7 +211,6 @@ void ParticleFilter::resample() {
 
   }
   particles = particles_new;
-
 }
 
 Particle ParticleFilter::SetAssociations(Particle particle, std::vector<int> associations, std::vector<double> sense_x, std::vector<double> sense_y)
